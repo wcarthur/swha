@@ -41,7 +41,7 @@ output_path = "C:/Workspace/data/derived/exposure/WA/"
 SA2_names = sorted(list(pd.unique(df['SA2_NAME'])))
 ages = sorted(list(pd.unique(df['YEAR_BUILT'])))
 
-
+print(ages)
 def plotAgeDist(df, locality):
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -269,11 +269,11 @@ def plotByCity(df, locality):
 # Calculate the proportion of pre-1980 construction in each Statistical Area:
 
 sa2 = df.groupby(['SA2_CODE','YEAR_BUILT',]).size().unstack(level=1)
-sa2['PROP_1980'] = sa2[ages[:4]].sum(axis=1)/sa2[ages].sum(axis=1)
+sa2['PROP_1980'] = sa2[ages[:5]].sum(axis=1)/sa2[ages].sum(axis=1)
 sa2.fillna(0).to_csv(pjoin(output_path, "SA2_building_age.csv"))
 
 
 sa1 = df.groupby(['SA1_CODE', 'YEAR_BUILT']).size().unstack(level=1)
-sa1['PROP_1980'] = sa1[ages[:4]].sum(axis=1)/sa1[ages].sum(axis=1)
+sa1['PROP_1980'] = sa1[ages[:5]].sum(axis=1)/sa1[ages].sum(axis=1)
 sa1.fillna(0).to_csv(pjoin(output_path, "SA1_building_age.csv"))
 
