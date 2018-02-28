@@ -38,6 +38,7 @@ df = pd.read_csv(inputFile)
 
 output_path = "C:/Workspace/data/derived/exposure/WA/"
 
+
 SA2_names = sorted(list(pd.unique(df['SA2_NAME'])))
 ages = sorted(list(pd.unique(df['YEAR_BUILT'])))
 
@@ -53,26 +54,9 @@ def plotAgeDist(df, locality):
     ax.set_ylabel("Number")
     plt.setp(ax.get_xticklabels(), rotation=90)
     ax.set_title("{0} - {1:,} residential buildings".format(locality, len(locdf.index)))
-    """
-    ax = fig.add_subplot(122)
-    suburblist = locdf[locdf['SUBURB'].notnull()]['SUBURB']
-    suburbs = sorted(list(pd.unique(suburblist)))
-    sns.countplot(x='SUBURB', hue='YEAR_BUILT', data=locdf,
-                  order=suburbs, hue_order=ages,
-                  palette=palette,ax=ax)
-    ax.set_xlabel("Suburb")
-    ax.set_ylabel("Number")
-    labels = [item.get_text() for item in ax.get_xticklabels()]
-    labels = [l.replace(' ', '\n').title() for l in labels]
-
-    ax.set_xticklabels(labels)
-    locs, labels = plt.xticks()
-
-    plt.setp(labels, rotation=90)
-    l = ax.legend(title="Year built", ncol=2)
-    """
     fig.tight_layout()
-    fig.savefig(pjoin(output_path, "{0}_SA2_AgeProfile.png".format(locality)))
+    fig.savefig(pjoin(output_path, "AgeProfile", "SA2",
+                      "{0}.png".format(locality)))
     plt.clf()
     plt.close('all')
 
@@ -110,9 +94,11 @@ def plotBySuburb(df, locality):
     locs, labels = plt.xticks()
     plt.setp(labels, rotation=90)
     l = ax.legend(title="Year built", ncol=2)
-    ax.set_title("{0} - {1:,} residential buildings".format(locality, len(locdf.index)))
+    ax.set_title("{0} - {1:,} residential buildings".
+                 format(locality, len(locdf.index)))
     fig.tight_layout()
-    plt.savefig(pjoin(output_path, "{0}_SA2_SuburbAgeProfile.png".format(locality)))
+    plt.savefig(pjoin(output_path, "AgeProfile", "SA2",
+                      "BySuburb", "{0}.png".format(locality)))
     plt.close('all')
 
 #for SA2 in SA2_names:
@@ -146,27 +132,11 @@ def plotAgeDistCity(df, locality):
     ax.set_xlabel("Year built")
     ax.set_ylabel("Number")
     plt.setp(ax.get_xticklabels(), rotation=90)
-    ax.set_title("{0} - {1:,} residential buildings".format(locality, len(locdf.index)))
-    """
-    suburblist = locdf[locdf['SA2_NAME'].notnull()]['SA2_NAME']
-    suburbs = sorted(list(pd.unique(suburblist)))
-    sns.countplot(x='SA2_NAME', hue='YEAR_BUILT', data=locdf,
-                  order=suburbs, hue_order=ages,
-                  palette=palette,ax=ax[1])
-    ax[1].set_xlabel("Suburb")
-    ax[1].set_ylabel("Number")
-    labels = [item.get_text() for item in ax[1].get_xticklabels()]
-    
-    labels = [re.sub(regex, "", l) for l in labels]
-
-    ax[1].set_xticklabels(labels)
-    locs, labels = plt.xticks()
-
-    plt.setp(labels, rotation=90)
-    l = ax[1].legend(title="Year built", ncol=2)
-    """
+    ax.set_title("{0} - {1:,} residential buildings".
+                 format(locality, len(locdf.index)))
     fig.tight_layout()
-    plt.savefig(pjoin(output_path, "{0}_UCL_AgeProfile.png".format(locality.replace('/','-'))))
+    plt.savefig(pjoin(output_path, "AgeProfile", "UCL", 
+                      "{0}.png".format(locality.replace('/','-'))))
     plt.close('all')
 
 
@@ -176,12 +146,14 @@ def plotByCity(df, locality):
     ax = fig.add_subplot(111)
 
     locdf = df[df['UCL_NAME'] == locality]
-    #suburblist = locdf[locdf['LGA_NAME'].notnull()]['LGA_NAME']
-    #suburbs = sorted(list(pd.unique(suburblist)))
+
     suburbs = locdf.groupby(['SUBURB', 'YEAR_BUILT']).size()
     ageprofile = suburbs.groupby(level=0).apply(lambda x: 100*x/float(x.sum()))
     cmap = ListedColormap(palette.as_hex())
-
+    nsuburbs=len(locdf['SUBURB'].unique())
+    if nsuburbs < 2:
+        print("Only one suburb in {0}".format(locality))
+        return
     try:
         ageprofile.unstack().plot(kind='barh', stacked=True, ax=ax, cmap=cmap)
     except AttributeError:
@@ -194,32 +166,54 @@ def plotByCity(df, locality):
         labels = [item.get_text() for item in ax.get_yticklabels()]
         ax.set_yticklabels([re.sub(regex, "", l).title() for l in labels])
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1),
-                  fancybox=True, shadow=True, ncol=7)
+                  fancybox=True, shadow=True, ncol=4)
 
-        """
-        sns.countplot(x='LGA_NAME', hue='YEAR_BUILT', data=locdf,
-                      order=suburbs, hue_order=ages,
-                      palette=palette,ax=ax)
-        ax.set_xlabel("Local Government Area")
-        ax.set_ylabel("Number")
-
-        labels = [item.get_text() for item in ax.get_xticklabels()]
-        labels = [re.sub(regex, "", l) for l in labels]
-        ax.set_xticklabels(labels)
-        locs, labels = plt.xticks()
-        plt.setp(labels, rotation=90)
-        l = ax.legend(title="Year built", ncol=2)
-        """
-        ax.set_title("{0} - {1:,} residential buildings".format(locality, len(locdf.index)))
+        ax.set_title("{0} - {1:,} residential buildings".
+                     format(locality, len(locdf.index)))
         fig.tight_layout()
 
-        plt.savefig(pjoin(output_path, "{0}_UCL_LGAAgeProfile.png".format(locality.replace('/','-'))),bbox_inches="tight" )
+        plt.savefig(pjoin(output_path, "AgeProfile", "UCL", 
+                          "BySuburb", "{0}.png".
+                          format(locality.replace('/','-'))),
+                    bbox_inches="tight" )
+        plt.close(fig)
+
+def plotByLGA(df, locality):
+    locdf = df[df['UCL_NAME'] == locality]
+    suburbs = locdf.groupby(['LGA_NAME', 'YEAR_BUILT']).size()
+    try:
+        ageprofile = suburbs.groupby(level=0).apply(lambda x: 100*x/float(x.sum()))
+    except AttributeError:
+        print("Skipping {0}".format(locality))
+        
+    else:
+        nsuburbs=len(locdf['LGA_NAME'].unique())
+        if nsuburbs < 2:
+            print("Only one LGA in {0}".format(locality))
+            return
+        fig = plt.figure(figsize=(12, 18))
+        ax = fig.add_subplot(111)
+        cmap = ListedColormap(palette.as_hex())
+        ageprofile.unstack().plot(kind='barh', stacked=True, ax=ax, cmap=cmap)
+        ax.set_xlabel("Percentage")
+        ax.set_xlim((0,100))
+        ax.set_ylabel("Local Government Area")
+        labels = [item.get_text() for item in ax.get_yticklabels()]
+        ax.set_yticklabels([re.sub(regex, "", l).title() for l in labels])
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1),
+                  fancybox=True, shadow=True, ncol=4)
+        fig.tight_layout()
+        plt.savefig(pjoin(output_path, "AgeProfile", "UCL", 
+                          "ByLGA", "{0}.png".
+                          format(locality.replace('/','-'))),
+                    bbox_inches="tight" )
         plt.close(fig)
 
 for ua in urbanareas:
     print(ua)
     plotAgeDistCity(df, ua)
     plotByCity(df, ua)
+    plotByLGA(df, ua)
     
 
 locdf = df[df['UCL_NAME'] == 'Geraldton']
@@ -240,29 +234,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1),
 
 urbanareas = sorted(list(pd.unique(df['UCL_NAME'])))[1:]
 cities = sorted(list(pd.unique(df['SA2_NAME'])))
-def plotByCity(df, locality):
-    locdf = df[df['UCL_NAME'] == locality]
-    suburbs = locdf.groupby(['LGA_NAME', 'YEAR_BUILT']).size()
-    try:
-        ageprofile = suburbs.groupby(level=0).apply(lambda x: 100*x/float(x.sum()))
-    except AttributeError:
-        print("Skipping {0}".format(locality))
-        
-    else:
-        nsuburbs=len(suburbs)
-        fig = plt.figure()
-        ax = plt.add_subplot(111) #figsize=(12, nsuburbs/12))
-        cmap = ListedColormap(palette.as_hex())
-        ageprofile.unstack().plot(kind='barh', stacked=True, ax=ax, cmap=cmap)
-        ax.set_xlabel("Percentage")
-        ax.set_xlim((0,100))
-        ax.set_ylabel("Local Government Area")
-        labels = [item.get_text() for item in ax.get_yticklabels()]
-        ax.set_yticklabels([re.sub(regex, "", l).title() for l in labels])
-        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1),
-                  fancybox=True, shadow=True, ncol=7)
-        fig.tight_layout()
-        plt.show()
+
     
 
 
@@ -270,10 +242,10 @@ def plotByCity(df, locality):
 
 sa2 = df.groupby(['SA2_CODE','YEAR_BUILT',]).size().unstack(level=1)
 sa2['PROP_1980'] = sa2[ages[:5]].sum(axis=1)/sa2[ages].sum(axis=1)
-sa2.fillna(0).to_csv(pjoin(output_path, "SA2_building_age.csv"))
+sa2.fillna(0).to_csv(pjoin(output_path, "AgeProfile", "SA2", "SA2_building_age.csv"))
 
 
 sa1 = df.groupby(['SA1_CODE', 'YEAR_BUILT']).size().unstack(level=1)
 sa1['PROP_1980'] = sa1[ages[:5]].sum(axis=1)/sa1[ages].sum(axis=1)
-sa1.fillna(0).to_csv(pjoin(output_path, "SA1_building_age.csv"))
+sa1.fillna(0).to_csv(pjoin(output_path, "AgeProfile", "SA1", "SA1_building_age.csv"))
 
