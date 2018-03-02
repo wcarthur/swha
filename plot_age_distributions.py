@@ -32,7 +32,7 @@ palette = sns.blend_palette(["#5E6A71", "#006983", "#72C7E7",
 # the path to the appropriate folder.
 
 
-inputFile = "C:/WorkSpace/data/derived/exposure/WA/WA_Residential_Wind_Exposure_2018_TCRM.CSV"
+inputFile = "C:/WorkSpace/data/derived/exposure/WA/WA_TILES_Residential_Wind_Exposure.csv"
 
 df = pd.read_csv(inputFile)
 
@@ -101,10 +101,10 @@ def plotBySuburb(df, locality):
                       "BySuburb", "{0}.png".format(locality)))
     plt.close('all')
 
-#for SA2 in SA2_names:
-#    print(SA2)
-#    plotAgeDist(df, SA2)
-#    plotBySuburb(df, SA2)
+for SA2 in SA2_names:
+    print(SA2)
+    plotAgeDist(df, SA2)
+    plotBySuburb(df, SA2)
 
 # For the Perth region, we perform the analysis at a larger
 # aggregation, due to the number of suburbs that make up the Greater
@@ -216,27 +216,8 @@ for ua in urbanareas:
     plotByLGA(df, ua)
     
 
-locdf = df[df['UCL_NAME'] == 'Geraldton']
-suburbs = locdf.groupby(['SUBURB', 'YEAR_BUILT']).size()
-ageprofile = suburbs.groupby(level=0).apply(lambda x: 100*x/float(x.sum()))
-
-f,ax = plt.subplots()
-cmap = ListedColormap(palette.as_hex())
-ageprofile.unstack().plot(kind='barh', stacked=True, ax=ax, cmap=cmap)
-ax.set_xlabel("Percentage")
-ax.set_ylabel("Suburb")
-labels = [item.get_text() for item in ax.get_yticklabels()]
-labels = [l.title() for l in labels]
-ax.set_yticklabels(labels)
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1),
-          fancybox=True, shadow=True, ncol=7)
-
-
 urbanareas = sorted(list(pd.unique(df['UCL_NAME'])))[1:]
 cities = sorted(list(pd.unique(df['SA2_NAME'])))
-
-    
-
 
 # Calculate the proportion of pre-1980 construction in each Statistical Area:
 
